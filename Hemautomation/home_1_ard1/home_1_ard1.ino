@@ -25,9 +25,13 @@ void loop() {
 
 sensors.requestTemperatures();
 
-float temperature = sensors.getTempCByIndex(0);
-Serial.print(temperature);
-dtostrf(temperature, 6, 2, msg);
+float temp = sensors.getTempCByIndex(0);
+Serial.print(temp);
+char temperature[10];  
+dtostrf(temp,4,3,temperature);
+
+
+dtostrf(temp, 6, 2, msg);
 //Serial.print(msg);
 //Serial.println(temperature);
     
@@ -35,6 +39,6 @@ vw_send((uint8_t *)msg, strlen(msg));
 
 vw_wait_tx();
 
-delay(1000);
+delay(10000);
 
 }
