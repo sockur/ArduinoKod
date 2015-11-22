@@ -13,18 +13,22 @@ IPAddress server(192, 168, 1, 121);
 EthernetClient ethClient;
 PubSubClient mqttClient(ethClient);
 
-typedef struct {		
-  int           nodeID; 		//node ID (1xx, 2xx, 3xx);  1xx = basement, 2xx = main floor, 3xx = outside
-  int		deviceID;		//sensor ID (2, 3, 4, 5)
-  unsigned long var1_usl; 		//uptime in ms
-  float         var2_float;   	        //sensor data?
-  float		var3_float;		//battery condition?
-} Payload;
-Payload message;
-
 float temp;
 
 int i;
+
+typedef struct {		
+  int           roomId; 		//node ID (1xx, 2xx, 3xx);  1xx = basement, 2xx = main floor, 3xx = outside
+  int		arduinoId;		//sensor ID (2, 3, 4, 5)
+  int           sensorId;
+  unsigned long data1_millisecs; 		//uptime in ms
+  int           data2;   	        //sensor data?
+  int           data2_factor;
+  int		data3;		//battery condition?
+  int           data3_factor;
+} MessageStruct;
+MessageStruct msg;
+
 
 
 void setup(){
@@ -48,17 +52,33 @@ void loop(){
   }
   mqttClient.loop();
   uint8_t buf[VW_MAX_MESSAGE_LEN];
-  uint8_t buflen = VW_MAX_MESSAGE_LEN;
+  uint8_t buflen ;
 
   if( vw_get_message(buf, &buflen) ) {
-     char* message = (char*)buf;
-     float temp = atof(message);
-     char temperature[10];  
-     dtostrf(temp,4,3,temperature);
-     Serial.println(temperature);
-    
-    
+    Serial.println( (char*) buf);
+    if (buflen == sizeof(MessageStruct))
+    {
+      // The right amount of data was received
+      memcpy( &msg, buf, sizeof(msg));       // copy the received data into the struct
 
+      Serial.print(F("identifier = "));
+      Serial.println( msg.roomId);
+      Serial.println( msg.arduinoId);
+      Serial.println( msg.sensorId);
+      Serial.println( msg.data2);
+      Serial.println( msg.data2_factor);
+    }
+    float factor = msg.data2_factor;
+    if (factor == 0.0){
+      factor = 1.0;
+    }  
+    
+    float temp = msg.data2;
+    temp = temp / factor;  
+    Serial.print( "temp : ");
+        Serial.println(temp);
+  char temperature[10];  
+     dtostrf(temp,4,3,temperature);
     mqttClient.publish("/home/1/ard1/p2/state",temperature);
      // delay(60000);
   }  
