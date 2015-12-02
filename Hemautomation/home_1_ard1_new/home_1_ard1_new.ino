@@ -15,6 +15,7 @@ int ROOM_ID = 1;
 int ARDUINO_ID = 1;
 int dallasTempSensorId = 1;
 int vw_tx_pin = 3;
+int vw_rx_pin = 2;
 int vw_data_speed = 2000;
 
 
@@ -32,6 +33,12 @@ typedef struct {
 } Message;
 Message message;
 
+// Acknowledge message type
+struct ack_t {
+  uint32_t id;
+  uint8_t nr;
+}; 
+ack_t ack;
 
 
 char msg[6];
@@ -72,6 +79,11 @@ void sendDallasTemp(){
   vw_send((uint8_t *)&message, sizeof(message));
   vw_wait_tx();
   
+ 
+  
+ // vw_wait_rx_max(300);
+ // uint8_t statys = vw_get_message(uint8_t* buf, uint8_t* len);
+  
 }  
 
 
@@ -80,6 +92,10 @@ void initDallasTemp(){
 }  
 
 void initVirtualWire(){
+
   vw_setup(vw_data_speed);
   vw_set_tx_pin(vw_tx_pin);
+  vw_set_rx_pin(vw_rx_pin);
+    
+    
 }  
