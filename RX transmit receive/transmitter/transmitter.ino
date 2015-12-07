@@ -11,7 +11,7 @@
     void setup() {
       pinMode(13,OUTPUT);
       vw_set_ptt_inverted(true); //
-      vw_set_tx_pin(12);
+      vw_set_tx_pin(2);
       vw_setup(4000);// speed of data transfer Kbps
       Serial.begin(115200); // Open serial monitor at 115200 baud to see ping results.
     }
