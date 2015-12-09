@@ -1,21 +1,23 @@
-// transmitter.pde
-//
-// Simple example of how to use VirtualWire to transmit messages
-// Implements a simplex (one-way) transmitter with an TX-C1 module
-//
-// See VirtualWire.h for detailed API docs
-// Author: Mike McCauley (mikem@open.com.au)
-// Copyright (C) 2008 Mike McCauley
-// $Id: transmitter.pde,v 1.3 2009/03/30 00:07:24 mikem Exp $
-
 #include <VirtualWire.h>
-#undef int
-#undef abs
-#undef double
-#undef float
-#undef round
+#include <OneWire.h>
+
+#include <DallasTemperature.h>
+
+#define ONE_WIRE_BUS 2
+
+OneWire oneWire(ONE_WIRE_BUS);
+
+DallasTemperature sensors(&oneWire);
+
+int ROOM_ID = 1;
+int ARDUINO_ID = 1;
+int dallasTempSensorId = 1;
+int vw_data_speed = 2000;
+int waitTimeAck = 5000;
+int delayTime = 300;
 int msgid = 0; 
 int loopNo = 0; 
+//
 
 typedef struct {		
   int           roomId; 		//node ID (1xx, 2xx, 3xx);  1xx = basement, 2xx = main floor, 3xx = outside
@@ -43,7 +45,14 @@ void setup()
     Serial.begin(9600);	  // Debugging only
     Serial.println("setup");
     initVirtualWire();
+    initDallasTemp();
 }
+
+
+void initDallasTemp(){
+  sensors.begin();
+}  
+
 
 void initVirtualWire(){
   Serial.println("Init VirtualWire");
@@ -105,5 +114,30 @@ void sendMsg(){
     }     
     delay(200);
     } while ((ack.msgId != msg.msgId) || (ack.deviceId != msg.deviceId));
+  
+}  
+
+
+void sendDallasTemp(){
+  
+  msg.sensorId = dallasTempSensorId;
+  // Temperature  
+  sensors.requestTemperatures();
+  float temp = sensors.getTempCByIndex(0);
+  msg.data1_millisecs = millis();
+  msg.data2 = (temp*100);
+  msg.data2_factor = 100;
+  msg.data3 = 0;
+
+  Serial.println(msg.roomId);
+  Serial.println(msg.deviceId);
+  Serial.println(msg.sensorId);
+  Serial.println(msg.msgId);
+  Serial.println(msg.data1_millisecs);
+  Serial.println(msg.data2);
+  sendMsg();
+  
+ // vw_wait_rx_max(300);
+ // uint8_t statys = vw_get_message(uint8_t* buf, uint8_t* len);
   
 }  

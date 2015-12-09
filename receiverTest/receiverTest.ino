@@ -60,8 +60,7 @@ void setup()
 void loop()
 {  
     loopNo++;
-    Serial.print("loopNo:");
-    Serial.println(loopNo);
+    
     uint8_t buf[VW_MAX_MESSAGE_LEN];
     uint8_t buflen = VW_MAX_MESSAGE_LEN;
 
