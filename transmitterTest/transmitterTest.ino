@@ -15,6 +15,7 @@
 #undef float
 #undef round
 int msgid = 0; 
+int loopNo = 0; 
 
 typedef struct {		
   int           roomId; 		//node ID (1xx, 2xx, 3xx);  1xx = basement, 2xx = main floor, 3xx = outside
@@ -41,40 +42,51 @@ void setup()
 {
     Serial.begin(9600);	  // Debugging only
     Serial.println("setup");
-
-    // Initialise the IO and ISR
-    //vw_set_ptt_inverted(true); // Required for DR3100
-
-    vw_set_tx_pin(3);
-    vw_set_rx_pin(4);
-    vw_setup(2000);	 // Bits per sec
-    vw_rx_start();
+    initVirtualWire();
 }
 
+void initVirtualWire(){
+  Serial.println("Init VirtualWire");
+  vw_set_tx_pin(5);
+  vw_set_rx_pin(6);
+  vw_setup(2000);	 // Bits per sec
+  vw_rx_start();
+}  
+
+
 void loop()
-{
-    int attempt = 0;
-    do{
-     attempt++; 
-    msgid++;
-    msg.deviceId = 1;
-    msg.msgId = msgid;
-    digitalWrite(13, true); // Flash a light to show transmitting
-    vw_send((uint8_t *)&msg, sizeof(msg));
-    vw_wait_tx(); // Wait until the whole message is gone
-    digitalWrite(13, false);
+{    
+    loopNo++;
+    Serial.print("loopNo:");
+    Serial.println(loopNo);
+    sendMsg();
+    delay(2000);
     
-    uint8_t buf2[VW_MAX_MESSAGE_LEN];
-    uint8_t buflen2 = VW_MAX_MESSAGE_LEN;
+}
+
+void sendMsg(){
+  int attempt = 0;
+    do{
+      attempt++; 
+      msgid++;
+      msg.deviceId = 1;
+      msg.msgId = msgid;
+      digitalWrite(13, true); // Flash a light to show transmitting
+      vw_send((uint8_t *)&msg, sizeof(msg));
+      vw_wait_tx(); // Wait until the whole message is gone
+      digitalWrite(13, false);
+    
+      uint8_t buf[VW_MAX_MESSAGE_LEN];
+      uint8_t buflen = VW_MAX_MESSAGE_LEN;
     
     // Wait 100 ms for an ack
     vw_wait_rx_max(100);
-    if (vw_get_message(buf2, &buflen2)) // Non-blocking
+    if (vw_get_message(buf, &buflen)) // Non-blocking
     {
-            Serial.println("Gor msg");
+            Serial.println("Got msg");
     }  
-    if (buflen2 == sizeof(ack_t)){
-          memcpy( &ack, buf2, sizeof(ack));    
+    if (buflen == sizeof(ack_t)){
+          memcpy( &ack, buf, sizeof(ack));    
          
          if ((ack.msgId == msg.msgId) && (ack.deviceId == msg.deviceId)) {
           Serial.print("Attempt no: "); 
@@ -93,6 +105,5 @@ void loop()
     }     
     delay(200);
     } while ((ack.msgId != msg.msgId) || (ack.deviceId != msg.deviceId));
-    delay(2000);
-    
-}
+  
+}  

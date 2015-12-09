@@ -37,6 +37,7 @@ typedef struct {
 ack_t ack;
 long randNumber;
 long rand2;
+int loopNo; 
 
 void setup()
 {
@@ -45,8 +46,8 @@ void setup()
 
     // Initialise the IO and ISR
     //vw_set_ptt_inverted(true); // Required for DR3100
-    vw_set_tx_pin(3);
-    vw_set_rx_pin(4);
+    vw_set_tx_pin(5);
+    vw_set_rx_pin(6);
     vw_setup(2000);	 // Bits per sec
     vw_rx_start();       // Start the receiver PLL running
     randomSeed(analogRead(0));
@@ -58,6 +59,9 @@ void setup()
 
 void loop()
 {  
+    loopNo++;
+    Serial.print("loopNo:");
+    Serial.println(loopNo);
     uint8_t buf[VW_MAX_MESSAGE_LEN];
     uint8_t buflen = VW_MAX_MESSAGE_LEN;
 
@@ -86,8 +90,9 @@ void loop()
         }  
         
         rand2 = random(10);
-        
-        if (rand2 > 7){
+        Serial.print("random:");
+        Serial.println(rand2);
+        if (rand2 > 3){
           vw_send((uint8_t *)&ack, sizeof(ack));
           vw_wait_tx(); // Wait until the whole message is gone
           
